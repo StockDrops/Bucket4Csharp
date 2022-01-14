@@ -108,7 +108,7 @@ namespace Bucket4Csharp.Core.Models
         /// Original property in Java's version is "isGready" but that's an obvious typo. Gready is not an adjective in english.
         /// </summary>
         public bool IsGreedy => !refillIntervally;
-        public string Id => id;
+        public string? Id => id;
         //serialization properties are not ported yet!.
         //https://github.com/vladimir-bukhtoyarov/bucket4j/blob/85a0148788223bc968fe4faa72f733b68dbf129f/bucket4j-core/src/main/java/io/github/bucket4j/Bandwidth.java#L197
         public bool HasId => id != null;

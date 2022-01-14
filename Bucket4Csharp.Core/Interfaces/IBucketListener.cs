@@ -6,6 +6,37 @@ using System.Threading.Tasks;
 
 namespace Bucket4Csharp.Core.Interfaces
 {
+    public class OnTokensEventArgs : EventArgs
+    {
+        public long Tokens { get; set; }
+        public OnTokensEventArgs(long numTokens) { Tokens = numTokens; }
+        public OnTokensEventArgs() { }
+    }
+    public class OnWaitEventArgs : EventArgs
+    {
+        public OnWaitEventArgs()
+        {
+        }
+
+        public OnWaitEventArgs(long nanoseconds)
+        {
+            Nanoseconds = nanoseconds;
+        }
+
+        public long Nanoseconds { get; set; }
+    }
+    public class OnInterruptedEventArgs : EventArgs
+    {
+        public ThreadInterruptedException ThreadInterruptedException { get; set; }
+        public OnInterruptedEventArgs(ThreadInterruptedException exception)
+        {
+            ThreadInterruptedException = exception;
+        }
+
+        public OnInterruptedEventArgs()
+        {
+        }
+    }
     /// <summary>
     /// Interface for listening to bucket related events. The typical use-cases of this interface are logging and monitoring.
     /// The bucket can be decorated by the listener via
@@ -33,30 +64,30 @@ namespace Bucket4Csharp.Core.Interfaces
         /// This method is called whenever {@code tokens} is consumed.
         /// </summary>
         /// <param name="tokens">tokens amount of tokens consumed</param>
-        void OnConsumed(long tokens);
+        event EventHandler<OnTokensEventArgs>? Consumed;
         /// <summary>
         /// This method is called whenever consumption request for {@code tokens} is rejected.
         /// </summary>
         /// <param name="tokens">amount of tokens rejected</param>
-        void OnRejected(long tokens);
+        event EventHandler<OnTokensEventArgs>? Rejected;
         /// <summary>
         /// This method is called each time when thread was parked for wait of tokens refill
         /// in result of interaction with {@link BlockingBucket}
         /// </summary>
         /// <param name="nanos">nanos amount of nanoseconds for which thread was parked</param>
-        void OnParked(long nanos);
+        event EventHandler<OnWaitEventArgs>? Parked;
         ///<summary>
         ///This method is called each time when thread was interrupted during the wait of tokens refill
         ///in result of interaction with <see cref="BlockingBucket"/>
         ///<paramref name="e">exception</paramref>
         ///</summary>    
-        void OnInterrupted(ThreadInterruptedException e);
+        event EventHandler<OnInterruptedEventArgs>? Interrupted;
         ///<summary>
         ///This method is called each time when delayed task was submit to {@link java.util.concurrent.ScheduledExecutorService}
         ///because of wait for tokens refill in result of interaction with { @link SchedulingBucket }
         ///<paramref name="nanos"/>
         ///</summary>
-        void OnDelayed(long nanos);
+        event EventHandler<OnWaitEventArgs>? Delayed;
     }
        
 }

@@ -17,7 +17,7 @@ namespace Bucket4Csharp.Core.Models;
 /// <see cref="IBucket.TryConsumeAndReturnRemaining(long)"/>
 /// <see cref=""/>
 /// </summary>
-public class ComsuptionProbe : ComparableByContent<ComsuptionProbe>
+public class ConsumptionProbe : ComparableByContent<ConsumptionProbe>
 {
     private readonly bool consumed;
     private readonly long remainingTokens;
@@ -27,17 +27,17 @@ public class ComsuptionProbe : ComparableByContent<ComsuptionProbe>
     // TODO: distributed properties. https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-core/src/main/java/io/github/bucket4j/distributed/serialization/SerializationHandle.java
     // public sealed static SerializationHandle<ConsumptionProbe> SERIALIZATION_HANDLE = new SerializationHandle<ConsumptionProbe>() { }
 
-    public static ComsuptionProbe Consumed(long remainingTokens, long nanosToWaitForReset)
+    public static ConsumptionProbe Consumed(long remainingTokens, long nanosToWaitForReset)
     {
-        return new ComsuptionProbe(true, remainingTokens, 0, nanosToWaitForReset);
+        return new ConsumptionProbe(true, remainingTokens, 0, nanosToWaitForReset);
     }
 
-    public static ComsuptionProbe Rejected(long remainingTokens, long nanosToWaitForRefill, long nanosToWaitForReset)
+    public static ConsumptionProbe Rejected(long remainingTokens, long nanosToWaitForRefill, long nanosToWaitForReset)
     {
-        return new ComsuptionProbe(false, remainingTokens, nanosToWaitForRefill, nanosToWaitForReset);
+        return new ConsumptionProbe(false, remainingTokens, nanosToWaitForRefill, nanosToWaitForReset);
     }
 
-    private ComsuptionProbe(bool consumed, long remainingTokens, long nanosToWaitForRefill, long nanosToWaitForReset)
+    private ConsumptionProbe(bool consumed, long remainingTokens, long nanosToWaitForRefill, long nanosToWaitForReset)
     {
         this.consumed = consumed;
         this.remainingTokens = Math.Max(remainingTokens, 0);
@@ -74,7 +74,7 @@ public class ComsuptionProbe : ComparableByContent<ComsuptionProbe>
     }
 
     ///<inheritdoc/>
-    public override bool EqualsByContent(ComsuptionProbe? other)
+    public override bool EqualsByContent(ConsumptionProbe? other)
     {
         if (other == null) { return false; }
         return consumed == other.consumed &&

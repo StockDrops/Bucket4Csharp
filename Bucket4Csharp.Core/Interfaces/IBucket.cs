@@ -1,4 +1,5 @@
 ﻿using Bucket4Csharp.Core.Models;
+using Bucket4Csharp.Core.Models.Local;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,16 @@ namespace Bucket4Csharp.Core.Interfaces
     /// </summary>
     public interface IBucket
     {
+        /// <summary>
+        /// Creates a new builder of in-memory buckets.
+        /// </summary>
+        /// <returns></returns>
+        static LocalBucketBuilder CreateBuilder()
+        {
+            return new LocalBucketBuilder();
+        }
+        // BlockingBucket AsBlocking(); //DO we really need this? there's the "as" keyword in c#
+        //TODO: https://github.com/vladimir-bukhtoyarov/bucket4j/blob/85a0148788223bc968fe4faa72f733b68dbf129f/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java#L54
         /// <summary>
         /// Tries to consume a specified number of tokens from this bucket.
         /// </summary>
@@ -44,7 +55,7 @@ namespace Bucket4Csharp.Core.Interfaces
         /// </summary>
         /// <param name="numTokens">The number of tokens to consume from the bucket, must be a positive number.</param>
         /// <returns><see cref="ConsumptionProbe"/> which describes both result of consumption and tokens remaining in the bucket after consumption.</returns>
-        ComsuptionProbe TryConsumeAndReturnRemaining(long numTokens);
+        ConsumptionProbe TryConsumeAndReturnRemaining(long numTokens);
         /// <summary>
         /// Estimates ability to consume a specified number of tokens.
         /// </summary>
@@ -113,6 +124,10 @@ namespace Bucket4Csharp.Core.Interfaces
         /// </summary>
         /// <param name="tokensToAdd">number of tokens to add</param>
         void ForceAddTokens(long tokensToAdd);
+        /// <summary>
+        /// Typically you should avoid using of this method for, because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
+        /// </summary>
+        long AvailableTokens { get; }
         void ReplaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
         /// <summary>
         /// Returns new copy of this bucket instance decorated by {@code listener}.

@@ -1,0 +1,2 @@
+﻿These have been ported from the awesome java library: https://github.com/vladimir-bukhtoyarov/bucket4j/tree/master/bucket4j-core/src/main/java/io/github/bucket4j
+They have being reorganized in sub folders for easier access but they use the same namespace.

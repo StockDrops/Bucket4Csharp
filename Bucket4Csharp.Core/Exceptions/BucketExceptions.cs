@@ -94,7 +94,7 @@ namespace Bucket4Csharp.Core.Exceptions
             return new ArgumentException(msg);
         }
 
-        public static ArgumentException FoundTwoBandwidthsWithSameId(int firstIndex, int secondIndex, String id)
+        public static ArgumentException FoundTwoBandwidthsWithSameId(int firstIndex, int secondIndex, string? id)
         {
             string pattern = "All identifiers must unique. Id: {0}, first index: {1}, second index: {2}";
             string msg = string.Format(pattern, id, firstIndex, secondIndex);

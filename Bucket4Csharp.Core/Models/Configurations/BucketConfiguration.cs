@@ -48,7 +48,7 @@ namespace Bucket4Csharp.Core.Models
 
             BucketConfiguration that = (BucketConfiguration)o;
 
-            return Array.Equals(bandwidths, that.bandwidths);
+            return Enumerable.SequenceEqual(bandwidths, that.bandwidths);
         }
         public override int GetHashCode()
         {
