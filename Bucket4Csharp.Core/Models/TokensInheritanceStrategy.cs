@@ -79,5 +79,8 @@ namespace Bucket4Csharp.Core.Models
         /// </para>
         /// </summary>
         Additive = 3,
+        //https://github.com/vladimir-bukhtoyarov/bucket4j/blob/85a0148788223bc968fe4faa72f733b68dbf129f/bucket4j-core/src/main/java/io/github/bucket4j/TokensInheritanceStrategy.java#L100
+        //the rest is not needed in C# since they have an int associated. A simple cast will get the "id".
+        //and you can parse an enum from an int too without any extra code.
     }
 }

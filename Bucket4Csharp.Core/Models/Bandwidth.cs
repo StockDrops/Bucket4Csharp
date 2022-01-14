@@ -77,7 +77,7 @@ namespace Bucket4Csharp.Core.Models
             {
                 throw BucketExceptions.NonPositiveInitialTokens(initialTokens);
             }
-            if (IsIntervallyAligned() && useAdaptiveInitialTokens)
+            if (IsIntervallyAligned && UseAdaptiveInitialTokens)
             {
                 throw BucketExceptions.IntervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens();
             }
