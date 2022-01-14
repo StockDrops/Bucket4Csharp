@@ -29,24 +29,37 @@ namespace Bucket4Csharp.Core.Models.Buckets
                 throw new TaskCanceledException();
             }
             maxWaitMilliseconds.CheckMaxWaitTime();
+            //convert to nanoseconds:
+            long maxWaitNanos;
+
+            if (maxWaitMilliseconds == long.MaxValue)
+            {
+                maxWaitNanos = long.MaxValue;
+            }
+            else
+            {
+                maxWaitNanos = 1_000_000L * maxWaitMilliseconds;
+            }
+            maxWaitNanos.CheckMaxWaitTime();
+
             numTokens.CheckTokensToConsume();
             try
             {
                 //transform this to milliseconds.
-                long milliSecondsToSleep = ReserveAndCalculateTimeToSleepImpl(numTokens, maxWaitMilliseconds, TimeUnit.Milliseconds);
-                if (milliSecondsToSleep == INFINITY_DURATION)
+                long nanosecondsToSleep = ReserveAndCalculateTimeToSleepImpl(numTokens, maxWaitNanos);
+                if (nanosecondsToSleep == INFINITY_DURATION)
                 {
                     OnRejected(new OnTokensEventArgs(numTokens));
                     return false;
                 }
-                if (milliSecondsToSleep == 0L)
+                if (nanosecondsToSleep == 0L)
                 {
                     OnConsumed(new OnTokensEventArgs(numTokens));
                     return true;
                 }
                 OnConsumed(new OnTokensEventArgs(numTokens));
-                OnDelayed(new OnWaitEventArgs(milliSecondsToSleep, TimeUnit.Milliseconds));
-                await Task.Delay((int)milliSecondsToSleep, cancellationToken).ConfigureAwait(false);// ns are 10^-9, ms are 10^-3
+                OnDelayed(new OnWaitEventArgs(nanosecondsToSleep, TimeUnit.Nanoseconds));
+                await Task.Delay((int)nanosecondsToSleep.ConvertTo(TimeUnit.Nanoseconds, TimeUnit.Milliseconds), cancellationToken).ConfigureAwait(false);// ns are 10^-9, ms are 10^-3
                 if (cancellationToken.IsCancellationRequested)
                 {
                     throw new TaskCanceledException();
@@ -66,19 +79,19 @@ namespace Bucket4Csharp.Core.Models.Buckets
 
             try
             {
-                long milliSecondsToSleep = ReserveAndCalculateTimeToSleepImpl(numTokens, INFINITY_DURATION, TimeUnit.Milliseconds);
-                if (milliSecondsToSleep == INFINITY_DURATION)
+                long nanosecondsToSleep = ReserveAndCalculateTimeToSleepImpl(numTokens, INFINITY_DURATION);
+                if (nanosecondsToSleep == INFINITY_DURATION)
                 {
                     throw BucketExceptions.ReservationOverflow();
                 }
-                if (milliSecondsToSleep == 0L)
+                if (nanosecondsToSleep == 0L)
                 {
                     OnConsumed(new OnTokensEventArgs(numTokens));
                     return;
                 }
                 OnConsumed(new OnTokensEventArgs(numTokens));
-                OnDelayed(new OnWaitEventArgs(milliSecondsToSleep, TimeUnit.Milliseconds));
-                await Task.Delay((int)milliSecondsToSleep, cancellationToken).ConfigureAwait(false);
+                OnDelayed(new OnWaitEventArgs(nanosecondsToSleep, TimeUnit.Nanoseconds));
+                await Task.Delay((int)nanosecondsToSleep.ConvertTo(TimeUnit.Nanoseconds, TimeUnit.Milliseconds), cancellationToken).ConfigureAwait(false);
                 return;
             }
             catch (Exception ex)

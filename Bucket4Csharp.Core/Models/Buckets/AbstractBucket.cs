@@ -32,7 +32,7 @@ namespace Bucket4Csharp.Core.Models
 
         protected abstract EstimationProbe EstimateAbilityToConsumeImpl(long numTokens);
 
-        protected abstract long ReserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusy, TimeUnit timeUnitUsed = TimeUnit.Nanoseconds);
+        protected abstract long ReserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusy);
 
         protected abstract void AddTokensImpl(long tokensToAdd);
 
