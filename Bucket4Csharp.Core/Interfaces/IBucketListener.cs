@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Bucket4Csharp.Core.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,12 +19,12 @@ namespace Bucket4Csharp.Core.Interfaces
         {
         }
 
-        public OnWaitEventArgs(long nanoseconds)
+        public OnWaitEventArgs(long value, TimeUnit timeUnit = TimeUnit.Nanoseconds)
         {
-            Nanoseconds = nanoseconds;
+            Value = value;
         }
-
-        public long Nanoseconds { get; set; }
+        public TimeUnit TimeUnit { get; set; }
+        public long Value { get; set; }
     }
     public class OnInterruptedEventArgs : EventArgs
     {
@@ -33,9 +34,7 @@ namespace Bucket4Csharp.Core.Interfaces
             ThreadInterruptedException = exception;
         }
 
-        public OnInterruptedEventArgs()
-        {
-        }
+        
     }
     /// <summary>
     /// Interface for listening to bucket related events. The typical use-cases of this interface are logging and monitoring.

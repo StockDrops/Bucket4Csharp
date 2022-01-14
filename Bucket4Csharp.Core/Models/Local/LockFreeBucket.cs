@@ -1,4 +1,6 @@
-﻿using Bucket4Csharp.Core.Interfaces;
+﻿using Bucket4Csharp.Core.Extensions;
+using Bucket4Csharp.Core.Interfaces;
+using Bucket4Csharp.Core.Models.Buckets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Bucket4Csharp.Core.Models.Local
 {
-    public abstract class LockFreeBucketContendedTimeMeter : AbstractBucket, IBucketListener
+    public abstract class LockFreeBucketContendedTimeMeter : SchedulingBucket, IBucketListener
     {
 
         protected readonly ITimeMeter timeMeter;
@@ -152,13 +154,37 @@ namespace Bucket4Csharp.Core.Models.Local
             }
         }
         protected override long ReserveAndCalculateTimeToSleepImpl(
-            long tokensToConsume, long waitIfBusyNanosLimit)
+            long tokensToConsume, long waitIfBusyLimit, TimeUnit timeUnitUsed = TimeUnit.Nanoseconds) //let's adapt this to use milliseconds.
         {
             StateWithConfiguration previousState = null!;
             Interlocked.Exchange(ref previousState, currentState);
             StateWithConfiguration newState = previousState.Copy();
             long currentTimeNanos = timeMeter.Nanoseconds;
-
+            //long currentTimeMilliseconds = timeMeter.Milliseconds;
+            long waitIfBusyNanosLimit;
+            if(waitIfBusyLimit == INFINITY_DURATION)
+            {
+                waitIfBusyNanosLimit = INFINITY_DURATION;
+            }
+            else
+            {
+                //convert.
+                switch (timeUnitUsed)
+                {
+                    case TimeUnit.Nanoseconds:
+                        waitIfBusyNanosLimit = waitIfBusyLimit;
+                        break;
+                    case TimeUnit.Milliseconds:
+                        waitIfBusyNanosLimit = 1_000_000L * waitIfBusyLimit;
+                        break;
+                    case TimeUnit.Microseconds:
+                        waitIfBusyNanosLimit = 1000L * waitIfBusyLimit;
+                        break;
+                    default:
+                        throw new InvalidOperationException("Unknown time unit.");
+                }
+            }
+            
             while (true)
             {
                 newState.RefillAllBandwidth(currentTimeNanos);
@@ -183,7 +209,7 @@ namespace Bucket4Csharp.Core.Models.Local
                 newState.Consume(tokensToConsume);
                 if (Interlocked.CompareExchange(ref currentState, newState, previousState) == previousState)
                 {
-                    return nanosToCloseDeficit;
+                    return nanosToCloseDeficit.ConvertTo(TimeUnit.Nanoseconds, timeUnitUsed);
                 }
                 Interlocked.Exchange(ref previousState, currentState);
                 newState.CopyStateFrom(previousState);

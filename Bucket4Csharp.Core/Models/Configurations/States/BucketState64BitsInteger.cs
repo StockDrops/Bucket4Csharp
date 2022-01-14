@@ -20,7 +20,7 @@ namespace Bucket4Csharp.Core.Interfaces
             for (int i = 0; i < bandwidths.Length; i++)
             {
                 SetCurrentSize(i, CalculateInitialTokens(bandwidths[i], currentTimeNanos));
-                SetLastRefillTimeNanos(i, CalculateLastRefillTimeNanos(bandwidths[i], currentTimeNanos));
+                SetLastRefillTimeNanos(i, CalculateLastRefillTime(bandwidths[i], currentTimeNanos));
             }
         }
         public IBucketState Copy()
@@ -62,7 +62,7 @@ namespace Bucket4Csharp.Core.Interfaces
                 if (previousBandwidth == null)
                 {
                     newState.SetCurrentSize(newBandwidthIndex, CalculateInitialTokens(newBandwidth, currentTimeNanos));
-                    newState.SetLastRefillTimeNanos(newBandwidthIndex, CalculateLastRefillTimeNanos(newBandwidth, currentTimeNanos));
+                    newState.SetLastRefillTimeNanos(newBandwidthIndex, CalculateLastRefillTime(newBandwidth, currentTimeNanos));
                     continue;
                 }
 
@@ -252,11 +252,11 @@ namespace Bucket4Csharp.Core.Interfaces
             }
             return delayAfterWillBePossibleToConsume;
         }
-        public void RefillAllBandwidth(Bandwidth[] limits, long currentTimeNanos)
+        public void RefillAllBandwidth(Bandwidth[] limits, long currentTime)
         {
             for (int i = 0; i < limits.Length; i++)
             {
-                Refill(i, limits[i], currentTimeNanos);
+                Refill(i, limits[i], currentTime);
             }
         }
         public void AddTokens(Bandwidth[] limits, long tokensToAdd)
@@ -273,13 +273,32 @@ namespace Bucket4Csharp.Core.Interfaces
                 ForceAddTokens(i, limits[i], tokensToAdd);
             }
         }
-        private long CalculateLastRefillTimeNanos(Bandwidth bandwidth, long currentTimeNanos)
+        /// <summary>
+        /// It would be nice if all the methods could work with variable time units. But for now this just takes the argument but won't use it.
+        /// </summary>
+        /// <param name="bandwidth"></param>
+        /// <param name="currentTime"></param>
+        /// <param name="timeUnitUsed"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        private long CalculateLastRefillTime(Bandwidth bandwidth, long currentTime, TimeUnit timeUnitUsed = TimeUnit.Nanoseconds)
         {
             if (!bandwidth.IsIntervallyAligned)
             {
-                return currentTimeNanos;
+                return currentTime;
             }
-            return bandwidth.timeOfFirstRefillMillis * 1_000_000 - bandwidth.refillPeriodNanos;
+            switch (timeUnitUsed)
+            {
+                case TimeUnit.Nanoseconds:
+                    return bandwidth.timeOfFirstRefillMillis * 1_000_000 - bandwidth.refillPeriodNanos;
+                case TimeUnit.Milliseconds:
+                    return bandwidth.timeOfFirstRefillMillis * 1_000_000 - bandwidth.refillPeriodNanos;
+                case TimeUnit.Microseconds:
+                    return bandwidth.timeOfFirstRefillMillis * 1_000_000 - bandwidth.refillPeriodNanos;
+                default:
+                    throw new InvalidOperationException("Unknown time unit");
+            }
+            
         }
         private long CalculateInitialTokens(Bandwidth bandwidth, long currentTimeNanos)
         {
@@ -369,26 +388,26 @@ namespace Bucket4Csharp.Core.Interfaces
                 SetCurrentSize(bandwidthIndex, newSize);
             }
         }
-        private void Refill(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos)
+        private void Refill(int bandwidthIndex, Bandwidth bandwidth, long currentTime, TimeUnit timeUnitUsed = TimeUnit.Nanoseconds)
         {
             long previousRefillNanos = GetLastRefillTimeNanos(bandwidthIndex);
-            if (currentTimeNanos <= previousRefillNanos)
+            if (currentTime <= previousRefillNanos)
             {
                 return;
             }
 
             if (bandwidth.RefillIntervally)
             {
-                long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.RefillPeriodNanos;
-                currentTimeNanos -= incompleteIntervalCorrection;
+                long incompleteIntervalCorrection = (currentTime - previousRefillNanos) % bandwidth.RefillPeriodNanos;
+                currentTime -= incompleteIntervalCorrection;
             }
-            if (currentTimeNanos <= previousRefillNanos)
+            if (currentTime <= previousRefillNanos)
             {
                 return;
             }
             else
             {
-                SetLastRefillTimeNanos(bandwidthIndex, currentTimeNanos);
+                SetLastRefillTimeNanos(bandwidthIndex, currentTime);
             }
 
             long capacity = bandwidth.Capacity;
@@ -402,7 +421,7 @@ namespace Bucket4Csharp.Core.Interfaces
                 return;
             }
 
-            long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
+            long durationSinceLastRefillNanos = currentTime - previousRefillNanos;
             long newSize = currentSize;
 
             if (durationSinceLastRefillNanos > refillPeriodNanos)

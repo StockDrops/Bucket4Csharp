@@ -19,6 +19,14 @@ namespace Bucket4Csharp.Core.Interfaces
         /// </summary>
         long Nanoseconds { get; }
         /// <summary>
+        /// Returns current time in microsecond precision, but not necessarily microsecond resolution.
+        /// </summary>
+        long Microseconds { get; }
+        /// <summary>
+        /// Returns current time in milliseconds precision.
+        /// </summary>
+        long Milliseconds { get; }
+        /// <summary>
         /// Returns {@code true} if implementation of clock behaves the similar way as {@link System#currentTimeMillis()}
         /// in other words if implementation can be used as wall clock.
         /// </summary>
