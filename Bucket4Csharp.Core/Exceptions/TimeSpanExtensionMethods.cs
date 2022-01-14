@@ -27,12 +27,12 @@ namespace Bucket4Csharp.Core.Exceptions
         /// </summary>
         /// <param name="self"></param>
         /// <returns></returns>
-        public static int Microseconds(this TimeSpan self)
+        public static long Microseconds(this TimeSpan self)
         {
             return (int)Math.Floor(
                (self.Ticks
                % TimeSpan.TicksPerMillisecond)
-               / (double)TicksPerMicrosecond);
+               / (double)TicksPerMicrosecond); //TODO: check validity of this.
         }
         /// <summary>
         /// Gets the Nanosecond fraction of a DateTime.  Note that the DateTime
@@ -40,10 +40,9 @@ namespace Bucket4Csharp.Core.Exceptions
         /// </summary>
         /// <param name="self">The DateTime object.</param>
         /// <returns>the number of Nanoseconds.</returns>
-        public static int Nanoseconds(this TimeSpan self)
+        public static long Nanoseconds(this TimeSpan self)
         {
-            return (int)(self.Ticks % TimeSpan.TicksPerMillisecond % TicksPerMicrosecond)
-               * NanosecondsPerTick;
+            return (self.Ticks / TimeSpan.TicksPerMillisecond) * 1_000_000L;
         }
         
     }

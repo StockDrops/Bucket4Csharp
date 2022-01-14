@@ -1,4 +1,6 @@
-﻿using Bucket4Csharp.Core.Interfaces;
+﻿using Bucket4Csharp.Core.Extensions;
+using Bucket4Csharp.Core.Interfaces;
+using Bucket4Csharp.Core.Models.Buckets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Bucket4Csharp.Core.Models.Local
 {
-    public abstract class LockFreeBucketContendedTimeMeter : AbstractBucket, IBucketListener
+    public abstract class LockFreeBucketContendedTimeMeter : SchedulingBucket, IBucketListener
     {
 
         protected readonly ITimeMeter timeMeter;
@@ -158,7 +160,7 @@ namespace Bucket4Csharp.Core.Models.Local
             Interlocked.Exchange(ref previousState, currentState);
             StateWithConfiguration newState = previousState.Copy();
             long currentTimeNanos = timeMeter.Nanoseconds;
-
+                   
             while (true)
             {
                 newState.RefillAllBandwidth(currentTimeNanos);

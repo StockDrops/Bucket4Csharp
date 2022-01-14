@@ -73,8 +73,9 @@ namespace Bucket4Csharp.Core.Models.Local
             switch (synchronizationStrategy)
             {
                 case SynchronizationStrategy.LockFree: return new LockFreeBucket(configuration, mathType, timeMeter);
-                case SynchronizationStrategy.Synchronized: return new SynchronizedBucket(configuration, mathType, timeMeter);
-                case SynchronizationStrategy.None: return new SynchronizedBucket(configuration, mathType, timeMeter, FakeLock.INSTANCE);
+                    //we haven't ported the stuff yet.
+                //case SynchronizationStrategy.Synchronized: return new SynchronizedBucket(configuration, mathType, timeMeter);
+                //case SynchronizationStrategy.None: return new SynchronizedBucket(configuration, mathType, timeMeter, FakeLock.INSTANCE);
                 default: throw new InvalidOperationException(); //https://stackoverflow.com/questions/2108544/java-lang-illegalstateexception-in-net
             }
         }

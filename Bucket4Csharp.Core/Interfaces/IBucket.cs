@@ -136,6 +136,6 @@ namespace Bucket4Csharp.Core.Interfaces
         /// </summary>
         /// <param name="listener"> listener the listener of bucket events.</param>
         /// <returns>new bucket instance decorated by listener</returns>
-        IBucket ToListenable(IBucketListener listener);
+        /// IBucket ToListenable(IBucketListener listener); //we use events in c#.
     }
 }

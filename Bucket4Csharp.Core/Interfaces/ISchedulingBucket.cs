@@ -12,7 +12,17 @@ namespace Bucket4Csharp.Core.Interfaces
     /// </summary>
     public interface ISchedulingBucket
     {
-        Task<bool> TryConsumeAsync(long numTokens, long maxWaitNanos, CancellationToken cancellationToken);
+        /// <summary>
+        /// In contrast with the Java library, our scheduling bucket uses milliseconds instead of nanoseconds for time periods.
+        /// This is because the async state machines in c# will be limited to milliseconds accuracies because of they way they are built.
+        /// 
+        /// 
+        /// </summary>
+        /// <param name="numTokens"></param>
+        /// <param name="maxWaitMillis"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task<bool> TryConsumeAsync(long numTokens, long maxWaitMillis, CancellationToken cancellationToken);
         /// <summary>
         /// Overload equivalent of <see cref="TryConsumeAsync(long, long, CancellationToken)"/>
         /// </summary>
@@ -22,7 +32,7 @@ namespace Bucket4Csharp.Core.Interfaces
         /// <returns></returns>
         Task<bool> TryConsumeAsync(long numTokens, TimeSpan maxWait, CancellationToken cancellationToken)
         {
-            return TryConsumeAsync(numTokens, maxWait.Nanoseconds(), cancellationToken);
+            return TryConsumeAsync(numTokens, (long)maxWait.TotalMilliseconds, cancellationToken);
         }
         /// <summary>
         /// Consumes the specified number of tokens from the bucket.

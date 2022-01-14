@@ -14,7 +14,7 @@ namespace Bucket4Csharp.Core.Models
     {
         protected static long INFINITY_DURATION = long.MaxValue;
         protected static long UNLIMITED_AMOUNT = long.MaxValue;
-        protected ILogger<AbstractBucket> logger;
+        protected ILogger<AbstractBucket>? logger;
 
         public abstract long AvailableTokens { get; }
 
@@ -32,7 +32,7 @@ namespace Bucket4Csharp.Core.Models
 
         protected abstract EstimationProbe EstimateAbilityToConsumeImpl(long numTokens);
 
-        protected abstract long ReserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanos);
+        protected abstract long ReserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusy);
 
         protected abstract void AddTokensImpl(long tokensToAdd);
 
@@ -99,49 +99,163 @@ namespace Bucket4Csharp.Core.Models
                 return false;
             }
         }
-
-        public long ConsumeIgnoringRateLimits(long numTokens)
+        public bool TryConsume(long tokensToConsume, long maxWaitTimeNanos, IBlockingStrategy blockingStrategy) 
         {
-            throw new NotImplementedException();
+            tokensToConsume.CheckTokensToConsume();
+            maxWaitTimeNanos.CheckMaxWaitTime();
+
+
+            long nanosToSleep = ReserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+            if (nanosToSleep == INFINITY_DURATION) {
+                OnRejected(new OnTokensEventArgs(tokensToConsume));
+                return false;
+            }
+            OnConsumed(new OnTokensEventArgs(tokensToConsume));
+            if (nanosToSleep > 0L)
+            {
+                try
+                {
+                    blockingStrategy.Park(nanosToSleep);
+                }
+                catch (ThreadInterruptedException e)
+                {
+                    OnInterrupted(new OnInterruptedEventArgs(e));
+                    throw e;
+                }
+                OnParked(new OnWaitEventArgs(nanosToSleep));
+            }
+            return true;
+        }
+        public bool TryConsumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos, IUninterruptibleBlockingStrategy blockingStrategy)
+        {
+            tokensToConsume.CheckTokensToConsume();
+            maxWaitTimeNanos.CheckMaxWaitTime();
+
+            long nanosToSleep = ReserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+            if (nanosToSleep == INFINITY_DURATION)
+            {
+                OnRejected(new OnTokensEventArgs(tokensToConsume));
+                return false;
+            }
+
+            OnConsumed(new OnTokensEventArgs(tokensToConsume));
+            if (nanosToSleep > 0L)
+            {
+                blockingStrategy.ParkUninterruptibly(nanosToSleep);
+                OnParked(new OnWaitEventArgs(nanosToSleep));
+            }
+
+            return true;
         }
 
-        public EstimationProbe EstimateAbilityToConsume(long numTokens)
+        public void Consume(long tokensToConsume, IBlockingStrategy blockingStrategy)
         {
-            throw new NotImplementedException();
+            tokensToConsume.CheckTokensToConsume();
+
+            long nanosToSleep = ReserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+            if (nanosToSleep == INFINITY_DURATION)
+            {
+                throw BucketExceptions.ReservationOverflow();
+            }
+
+            OnConsumed(new OnTokensEventArgs(tokensToConsume));
+            if (nanosToSleep > 0L)
+            {
+                try
+                {
+                    blockingStrategy.Park(nanosToSleep);
+                }
+                catch (ThreadInterruptedException e)
+                {
+                    OnInterrupted(new OnInterruptedEventArgs(e));
+                    throw e;
+                }
+                OnParked(new OnWaitEventArgs(nanosToSleep));
+            }
+        }
+        public void ConsumeUninterruptibly(long tokensToConsume, IUninterruptibleBlockingStrategy blockingStrategy)
+        {
+            tokensToConsume.CheckTokensToConsume();
+
+            long nanosToSleep = ReserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+            if (nanosToSleep == INFINITY_DURATION)
+            {
+                throw BucketExceptions.ReservationOverflow();
+            }
+
+            OnConsumed(new OnTokensEventArgs(tokensToConsume));
+            if (nanosToSleep > 0L)
+            {
+                blockingStrategy.ParkUninterruptibly(nanosToSleep);
+                OnParked(new OnWaitEventArgs(nanosToSleep));
+            }
         }
 
-        public void ForceAddTokens(long tokensToAdd)
+        public long ConsumeIgnoringRateLimits(long tokensToConsume)
         {
-            throw new NotImplementedException();
+            tokensToConsume.CheckTokensToConsume();
+            long penaltyNanos = ConsumeIgnoringRateLimitsImpl(tokensToConsume);
+            if (penaltyNanos == INFINITY_DURATION)
+            {
+                throw BucketExceptions.ReservationOverflow();
+            }
+            OnConsumed(new OnTokensEventArgs(tokensToConsume));
+            return penaltyNanos;
         }
-
-        public void ReplaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBucket ToListenable(IBucketListener listener)
-        {
-            throw new NotImplementedException();
-        }
-
-        
-
-        public ConsumptionProbe TryConsumeAndReturnRemaining(long numTokens)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long TryConsumeAsMuchAsPossible()
-        {
-            throw new NotImplementedException();
-        }
-
         public long TryConsumeAsMuchAsPossible(long limit)
         {
-            throw new NotImplementedException();
+            limit.CheckTokensToConsume();
+
+            long consumed = ConsumeAsMuchAsPossibleImpl(limit);
+            if (consumed > 0)
+            {
+                OnConsumed(new OnTokensEventArgs(consumed));
+            }
+
+            return consumed;
         }
-        
+        public long TryConsumeAsMuchAsPossible()
+        {
+            long consumed = ConsumeAsMuchAsPossibleImpl(UNLIMITED_AMOUNT);
+            if (consumed > 0)
+            {
+                OnConsumed(new OnTokensEventArgs(consumed));
+            }
+            return consumed;
+        }
+        public ConsumptionProbe TryConsumeAndReturnRemaining(long tokensToConsume)
+        {
+            tokensToConsume.CheckTokensToConsume();
+
+            ConsumptionProbe probe = TryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+            if (probe.IsConsumed)
+            {
+                OnConsumed(new OnTokensEventArgs(tokensToConsume));
+            }
+            else
+            {
+                OnRejected(new OnTokensEventArgs(tokensToConsume));
+            }
+            return probe;
+        }
+        public EstimationProbe EstimateAbilityToConsume(long numTokens)
+        {
+            numTokens.CheckTokensToConsume();
+            return EstimateAbilityToConsumeImpl(numTokens);
+        }
+        public void ForceAddTokens(long tokensToAdd)
+        {
+            tokensToAdd.CheckTokensToAdd();
+            ForceAddTokensImpl(tokensToAdd);
+        }
+        public void ReplaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy)
+        {
+            newConfiguration.CheckConfiguration();
+            
+            ReplaceConfigurationImpl(newConfiguration, tokensInheritanceStrategy);
+        }
+
+
         protected virtual void OnConsumed(OnTokensEventArgs e)
         {
             

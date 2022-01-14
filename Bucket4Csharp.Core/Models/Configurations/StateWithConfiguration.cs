@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 
 namespace Bucket4Csharp.Core.Models
 {
+    public enum TimeUnit
+    {
+        Milliseconds,
+        Microseconds,
+        Nanoseconds
+    }
     internal class StateWithConfiguration
     {
 
@@ -30,9 +36,19 @@ namespace Bucket4Csharp.Core.Models
             state.CopyStateFrom(other.state);
         }
 
-        internal void RefillAllBandwidth(long currentTimeNanos)
+        internal void RefillAllBandwidth(long currentTime, TimeUnit timeUnitUsed = TimeUnit.Nanoseconds)
         {
-            state.RefillAllBandwidth(configuration.Bandwidths, currentTimeNanos);
+            switch (timeUnitUsed)
+            {
+                case TimeUnit.Milliseconds:
+                    break;
+                case TimeUnit.Microseconds:
+                    break;
+                case TimeUnit.Nanoseconds:
+                    state.RefillAllBandwidth(configuration.Bandwidths, currentTime);
+                    break;
+            }
+            
         }
 
         internal long GetAvailableTokens()

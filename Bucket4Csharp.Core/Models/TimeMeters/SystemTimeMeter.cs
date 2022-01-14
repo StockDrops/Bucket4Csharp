@@ -9,7 +9,9 @@ namespace Bucket4Csharp.Core.Models
 {
     public class SystemTimeMeter : ITimeMeter
     {
-        public long Nanoseconds => CurrentTimeMillis();
+        public long Nanoseconds => 1000L * CurrentTimeMicroseconds();
+        public long Microseconds => CurrentTimeMicroseconds();
+        public long Milliseconds => CurrentTimeMilliseconds();
 
         public bool IsWallClockBased => true;
 
@@ -17,9 +19,13 @@ namespace Bucket4Csharp.Core.Models
         private static readonly DateTime Jan1st1970 = new DateTime
                          (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        private static long CurrentTimeMillis()
+        private static long CurrentTimeMilliseconds()
         {
-            return (long)(DateTime.UtcNow - Jan1st1970).TotalMilliseconds;
+            return (DateTime.UtcNow - Jan1st1970).Ticks / TimeSpan.TicksPerMillisecond;
+        }
+        private static long CurrentTimeMicroseconds()
+        {
+            return 1000L * (DateTime.UtcNow - Jan1st1970).Ticks / TimeSpan.TicksPerMillisecond;
         }
     }
 }
