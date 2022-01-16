@@ -1,10 +1,33 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>0.1.0</Version>
+    <Company>$(Authors)</Company>
+    <Authors>StockDrops</Authors>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Description>A port of the Bucket4J library to C#. It's in its early stages but the main core components work.
+The LockFreeBucket has being ported, but the blocking, and synchronized buckets have not.</Description>
+    <PackageLicenseFile>C:\Users\emore\source\repos\Bucket4Csharp\LICENSE.TXT</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
+
+	<PropertyGroup>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="LICENSE.TXT" Pack="true"
+
+        PackagePath="LICENSE.txt"/>
+	</ItemGroup>
+	
+	<ItemGroup>
+    <EmbeddedResource Include="LICENSE.TXT">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Models\Base\" />
