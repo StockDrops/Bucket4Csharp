@@ -38,8 +38,6 @@ namespace Bucket4Csharp.Core.Models.Local
         }
         /// <summary>
         /// Proxy method for <see cref="WithHundredNanosecondPrecision"/> for easy compatibility with java's original code.
-        /// This is because in java you can get a higher precision than in c# not that it would matter to be honest.
-        /// 1 ns or 100 ns you wouldn't be able to tell... having a physics background is crazy how most devs have 0 clue about orders of magnitudes, and significant digits. Rant finished.
         /// </summary>
         /// <returns></returns>
         public LocalBucketBuilder WithNanosecondPrecision() => WithHundredNanosecondPrecision();
