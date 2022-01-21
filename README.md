@@ -20,4 +20,28 @@ var result = newBucket.TryConsume(1).
 ```
 If there's an available token it will return true. If the rate limit is reached it will return false.
 
-You can also cast it to an ISchedulingBucket if you want to wait until there's an available token using the async/await, and TryConsumeAsync.
+You can also cast it to an ISchedulingBucket if you want to wait until there's an available token using the async/await, and ConsumeAsync.
+
+For example:
+
+```csharp
+public async Task SchedulingBucketExample()
+        {
+            var limit = Bandwidth.Simple(1, TimeSpan.FromSeconds(30));
+            var bucket = IBucket.CreateBuilder()
+                            .AddLimit(limit)
+                            .Build() as ISchedulingBucket;
+            if(bucket != null)
+            {
+                var count = 0;
+                var cancellationTokenSource = new CancellationTokenSource();
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(240));
+                while (count < 10)
+                {
+                    await bucket.ConsumeAsync(1, cancellationTokenSource.Token);
+                    Debug.WriteLine($"{DateTime.Now:T}");
+                    count++;
+                }
+            }
+```
+This method will run only every 30 seconds as it will be rate limited by the bucket.
